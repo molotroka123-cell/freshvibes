@@ -8,6 +8,24 @@ const { useState, useEffect, useMemo, useCallback } = React;
 const SCREENS = ['home', 'step1', 'step2', 'step3', 'step4', 'confirm'];
 const API = '/api/v1';
 
+// Demo fallback for when there is no backend (e.g. on GitHub Pages).
+const DEMO_SERVICES = [
+  { id: 1, slug: 'therapy',     name_ru: 'Терапия',      name_cz: 'Terapie',          name_en: 'Therapy',       duration_min: 45, price_display: 'от 1 200 Kč' },
+  { id: 2, slug: 'cleaning',    name_ru: 'Чистка',       name_cz: 'Dentální hygiena', name_en: 'Cleaning',      duration_min: 60, price_display: 'от 2 400 Kč' },
+  { id: 3, slug: 'diagnostics', name_ru: 'Диагностика',  name_cz: 'Diagnostika',      name_en: 'Diagnostics',   duration_min: 30, price_display: 'от 700 Kč' },
+  { id: 4, slug: 'whitening',   name_ru: 'Отбеливание',  name_cz: 'Bělení zubů',      name_en: 'Whitening',     duration_min: 90, price_display: 'от 7 500 Kč' },
+  { id: 5, slug: 'implant',     name_ru: 'Имплантация',  name_cz: 'Implantace',       name_en: 'Implantation',  duration_min: 90, price_display: 'от 22 500 Kč' },
+  { id: 6, slug: 'aesthetic',   name_ru: 'Эстетика',     name_cz: 'Estetika',         name_en: 'Aesthetics',    duration_min: 60, price_display: 'от 3 800 Kč' },
+];
+const DEMO_CLINICIANS = [
+  { id: 1, slug: 'novakova',  name: 'Kateřina Nováková', title: 'Терапевт',          service_ids: [1,2,3,4,6] },
+  { id: 2, slug: 'svoboda',   name: 'Petr Svoboda',      title: 'Хирург-имплантолог', service_ids: [3,5] },
+  { id: 3, slug: 'dvorakova', name: 'Marie Dvořáková',   title: 'Ортодонт',          service_ids: [3,6] },
+  { id: 4, slug: 'cerny',     name: 'Jan Černý',         title: 'Пародонтолог',       service_ids: [1,2,3] },
+  { id: 5, slug: 'horakova',  name: 'Olga Horáková',     title: 'Детский стоматолог', service_ids: [1,2,3] },
+];
+const DEMO_MODE_KEY = 'aurum_demo_appointments';
+
 function api(path, opts = {}) {
   return fetch(API + path, {
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
@@ -17,6 +35,18 @@ function api(path, opts = {}) {
     if (r.status === 204) return null;
     return r.json();
   });
+}
+
+function demoLoad() {
+  try { return JSON.parse(localStorage.getItem(DEMO_MODE_KEY) || '[]'); } catch { return []; }
+}
+function demoSave(appt) {
+  const list = demoLoad();
+  const id = list.length ? Math.max(...list.map(a => a.id)) + 1 : 1;
+  const row = { ...appt, id, status: 'pending', created_at: new Date().toISOString() };
+  list.push(row);
+  localStorage.setItem(DEMO_MODE_KEY, JSON.stringify(list));
+  return row;
 }
 
 function ControlPanel({ lang, setLang, theme, setTheme, screen, setScreen }) {
@@ -57,6 +87,7 @@ function AppRoot() {
   const [clinicians, setClinicians] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [demoMode, setDemoMode] = useState(false);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
@@ -65,7 +96,12 @@ function AppRoot() {
   useEffect(() => {
     Promise.all([api('/services'), api('/clinicians')])
       .then(([s, c]) => { setServices(s); setClinicians(c); })
-      .catch(e => setToast('API: ' + e.message));
+      .catch(() => {
+        setServices(DEMO_SERVICES);
+        setClinicians(DEMO_CLINICIANS);
+        setDemoMode(true);
+        setToast('Demo-режим: backend не подключён, записи сохраняются в браузере');
+      });
   }, []);
 
   const goNext = useCallback(() => {
@@ -83,31 +119,31 @@ function AppRoot() {
     const start = new Date();
     start.setDate(start.getDate() + 2);
     start.setHours(10, 0, 0, 0);
+    const payload = {
+      service_id: service.id, clinician_id: cl.id, starts_at: start.toISOString(),
+      client: {
+        name: 'Demo Patient', phone: '+420 777 123 456',
+        email: `demo+${Date.now()}@aurumdent.cz`,
+        note: 'Тестовая запись из booking flow', gdpr_consent: true,
+      },
+    };
     setSubmitting(true);
     try {
-      const r = await api('/appointments', {
-        method: 'POST',
-        body: JSON.stringify({
-          service_id: service.id,
-          clinician_id: cl.id,
-          starts_at: start.toISOString(),
-          client: {
-            name: 'Demo Patient',
-            phone: '+420 777 123 456',
-            email: `demo+${Date.now()}@aurumdent.cz`,
-            note: 'Тестовая запись из booking flow',
-            gdpr_consent: true,
-          },
-        }),
-      });
-      setToast(`✓ Запись #${r.id} создана`);
+      if (demoMode) {
+        const r = demoSave({ ...payload, client_name: payload.client.name,
+          service_name: service.name_ru, clinician_name: cl.name });
+        setToast(`✓ Запись #${r.id} сохранена в браузере`);
+      } else {
+        const r = await api('/appointments', { method: 'POST', body: JSON.stringify(payload) });
+        setToast(`✓ Запись #${r.id} создана`);
+      }
       setScreen('confirm');
     } catch (e) {
       setToast('✗ ' + e.message);
     } finally {
       setSubmitting(false);
     }
-  }, [services, clinicians, submitting]);
+  }, [services, clinicians, submitting, demoMode]);
 
   // Event delegation: intercept clicks on CTA buttons inside the iPhone frame.
   const onFrameClick = useCallback((e) => {
