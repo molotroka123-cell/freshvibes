@@ -1,6 +1,13 @@
 node_modules/
 data/*.sqlite
 data/*.sqlite-journal
+data/*.sqlite-shm
+data/*.sqlite-wal
 .env
 .DS_Store
 npm-debug.log*
+
+# Design package binaries/drafts — keep source JSX/HTML/README only
+design/*.zip
+design/debug/
+design/uploads/

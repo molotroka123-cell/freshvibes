@@ -1,0 +1,83 @@
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  min-height: 100%;
+}
+body {
+  background-color: #EFEAE1;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%,
+      rgba(232, 200, 145, 0.28), transparent 70%),
+    radial-gradient(ellipse 90% 40% at 50% 110%,
+      rgba(60, 40, 20, 0.08), transparent 70%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.32  0 0 0 0 0.2  0 0 0 0 0.35 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>"),
+    linear-gradient(135deg, #F4EFE4 0%, #EBE3D4 50%, #E6DCC8 100%);
+  background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+  background-size: auto, auto, 220px 220px, auto;
+  background-attachment: fixed, fixed, fixed, fixed;
+  min-height: 100vh;
+}
+body[data-theme="dark"] {
+  background-color: #14110E;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%,
+      rgba(212,168,90,0.20), transparent 70%),
+    radial-gradient(ellipse 90% 40% at 50% 110%,
+      rgba(0,0,0,0.4), transparent 70%),
+    linear-gradient(135deg, #1F1A14 0%, #14110E 100%);
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%,
+    transparent 55%, rgba(40, 28, 12, 0.14) 100%);
+}
+#root { position: relative; z-index: 1; }
+* { box-sizing: border-box; }
+
+button { font: inherit; }
+
+/* Focus-visible — gold 2px outline with offset (a11y per design system §7) */
+button:focus-visible, [role="button"]:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, a:focus-visible {
+  outline: 2px solid #B8873C;
+  outline-offset: 2px;
+}
+
+.au-stage {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  padding: 24px 0 24px;
+}
+.au-controls {
+  position: fixed; top: 16px; right: 16px; z-index: 100;
+  display: flex; gap: 8px; align-items: center;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-radius: 14px; padding: 8px 10px;
+  box-shadow: 0 4px 18px rgba(40,28,10,0.10);
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+  color: #1F1E1C;
+}
+.au-controls button {
+  background: none; border: none; cursor: pointer;
+  padding: 6px 10px; border-radius: 8px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+  color: #6B635A;
+  letter-spacing: 0.4px;
+}
+.au-controls button.active { color: #B8873C; background: #FAF1DD; }
+.au-controls .au-sep { width: 1px; height: 18px; background: rgba(40,30,20,0.12); }
+.au-controls .au-link {
+  color: #6B635A; text-decoration: none;
+  padding: 6px 10px; border-radius: 8px;
+}
+.au-controls .au-link:hover { color: #B8873C; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+}
