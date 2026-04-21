@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurum Dent — iOS App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    min-height: 100%;
+  }
+  body {
+    /* Layered canvas background — warm paper with subtle grain */
+    background-color: #EFEAE1;
+    background-image:
+      /* top warm light */
+      radial-gradient(ellipse 80% 50% at 50% -10%,
+        rgba(232, 200, 145, 0.28), transparent 70%),
+      /* bottom cool shadow */
+      radial-gradient(ellipse 90% 40% at 50% 110%,
+        rgba(60, 40, 20, 0.08), transparent 70%),
+      /* very faint paper grain — procedural SVG noise */
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.32  0 0 0 0 0.2  0 0 0 0.35 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>"),
+      /* soft diagonal wash for depth */
+      linear-gradient(135deg, #F4EFE4 0%, #EBE3D4 50%, #E6DCC8 100%);
+    background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+    background-size: auto, auto, 220px 220px, auto;
+    background-attachment: fixed, fixed, fixed, fixed;
+  }
+  /* corner vignette */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse 100% 100% at 50% 50%,
+      transparent 55%, rgba(40, 28, 12, 0.14) 100%);
+  }
+  #root { position: relative; z-index: 1; }
+  * { box-sizing: border-box; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="i18n.jsx"></script>
+<script type="text/babel" src="AurumUI.jsx"></script>
+<script type="text/babel" src="HomeScreen.jsx"></script>
+<script type="text/babel" src="BookingScreens.jsx"></script>
+
+<script type="text/babel">
+/*EDITMODE-BEGIN*/
+const TWEAK_DEFAULTS = {
+  "showLight": true,
+  "showDark": true
+}
+/*EDITMODE-END*/
+
+function App() {
+  const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
+  const [editOn, setEditOn] = React.useState(false);
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === '__activate_edit_mode') setEditOn(true);
+      if (e.data.type === '__deactivate_edit_mode') setEditOn(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const setKey = (k, v) => {
+    const next = { ...tweaks, [k]: v };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+  };
+
+  const screens = [
+    { label: '01 · Главная',            Cmp: HomeScreen },
+    { label: '02 · Шаг 1 · Врач',       Cmp: Step1DoctorScreen },
+    { label: '03 · Шаг 2 · Услуга',     Cmp: Step2ServiceScreen },
+    { label: '04 · Шаг 3 · Дата',       Cmp: Step3DateScreen },
+    { label: '05 · Шаг 4 · Данные',     Cmp: Step4DetailsScreen },
+    { label: '06 · Подтверждено',       Cmp: ConfirmScreen },
+  ];
+
+  return (
+    <>
+      <DesignCanvas minScale={0.1} maxScale={3}>
+        {tweaks.showLight && (
+          <DCSection title="Aurum Dent · Светлая тема"
+            subtitle="Премиальная стоматология · main + 4-step booking + confirmation"
+            gap={56}>
+            {screens.map((s, i) => (
+              <DCArtboard key={i} label={s.label} width={390} height={844}
+                style={{ borderRadius: 54 }}>
+                <AuFrame theme="light"><s.Cmp/></AuFrame>
+              </DCArtboard>
+            ))}
+          </DCSection>
+        )}
+
+        {tweaks.showDark && (
+          <DCSection title="Aurum Dent · Тёмная тема"
+            subtitle="Espresso + champagne gold"
+            gap={56}>
+            {screens.map((s, i) => (
+              <DCArtboard key={i} label={s.label} width={390} height={844}
+                style={{ borderRadius: 54, background: '#14110E' }}>
+                <AuFrame theme="dark"><s.Cmp/></AuFrame>
+              </DCArtboard>
+            ))}
+          </DCSection>
+        )}
+
+        <DCPostIt top={160} left={40} rotate={-3} width={230}>
+          Каждая страница — свой артборд. Заголовки серифом (Cormorant Garamond) — дорогой спокойный тон. Две темы: светлая и тёмная.
+        </DCPostIt>
+      </DesignCanvas>
+
+      {editOn && (
+        <div style={{
+          position: 'fixed', right: 24, bottom: 24, width: 240,
+          background: '#fff', borderRadius: 16, padding: 16,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          fontFamily: '-apple-system, system-ui, sans-serif',
+          zIndex: 1000,
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Tweaks</div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 8, cursor: 'pointer' }}>
+            <input type="checkbox" checked={tweaks.showLight}
+              onChange={e => setKey('showLight', e.target.checked)}/>
+            Показать светлую тему
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+            <input type="checkbox" checked={tweaks.showDark}
+              onChange={e => setKey('showDark', e.target.checked)}/>
+            Показать тёмную тему
+          </label>
+        </div>
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
