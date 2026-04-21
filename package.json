@@ -1,0 +1,20 @@
+{
+  "name": "aurum-dent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aurum Dent — online booking for a premium dental clinic in Prague (test build).",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "seed": "node server/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

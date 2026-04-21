@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurum Dent · Админка</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF8F3; --card:#FFFFFF; --ink:#1F1E1C; --muted:#8C8579;
+    --gold:#B8873C; --goldTint:#EBD5B0; --beigeHi:#FAF1DD;
+    --divider:rgba(40,30,20,0.08); --danger:#8B3A2F; --ok:#4A6B3F;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: Inter, system-ui, sans-serif; font-size: 14px;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 32px; border-bottom: 1px solid var(--divider);
+    background: #fff;
+  }
+  header .brand { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; letter-spacing: .4px; }
+  header .brand small { color: var(--gold); margin-left: 6px; font-size: 14px; }
+  header a { color: var(--muted); text-decoration: none; font-size: 13px; }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+  .stat {
+    background: var(--card); border-radius: 20px; padding: 18px 20px;
+    box-shadow: 0 1px 2px rgba(40,28,10,0.04), 0 4px 14px rgba(40,28,10,0.05);
+  }
+  .stat .n { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 500; line-height: 1; }
+  .stat .l { font-size: 12px; color: var(--muted); margin-top: 8px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+  section.panel {
+    background: var(--card); border-radius: 20px; padding: 0;
+    box-shadow: 0 1px 2px rgba(40,28,10,0.04), 0 4px 14px rgba(40,28,10,0.05);
+    margin-bottom: 24px; overflow: hidden;
+  }
+  section.panel h2 {
+    font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 22px;
+    margin: 0; padding: 18px 24px; border-bottom: 1px solid var(--divider);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--divider); font-size: 13px; }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; background: #FAF7F0; }
+  tr:last-child td { border-bottom: none; }
+  .status { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .3px; }
+  .status.pending { background: var(--beigeHi); color: var(--gold); }
+  .status.confirmed { background: #E0EDD8; color: var(--ok); }
+  .status.cancelled { background: #F5D9D5; color: var(--danger); }
+  .status.completed { background: #E4DFF5; color: #5A4A8F; }
+  button {
+    font: inherit; cursor: pointer;
+    padding: 6px 12px; border-radius: 10px; border: 1px solid var(--goldTint);
+    background: var(--beigeHi); color: var(--gold); font-weight: 600; font-size: 12px;
+  }
+  button:hover { background: var(--gold); color: #fff; }
+  button.ghost { background: transparent; border-color: var(--divider); color: var(--muted); }
+  select { padding: 4px 8px; border-radius: 8px; border: 1px solid var(--divider); font: inherit; font-size: 12px; }
+  .login {
+    max-width: 380px; margin: 120px auto;
+    background: var(--card); padding: 32px; border-radius: 24px;
+    box-shadow: 0 1px 2px rgba(40,28,10,0.04), 0 10px 28px rgba(40,28,10,0.07);
+  }
+  .login h1 { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 28px; margin: 0 0 6px; }
+  .login p { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+  .login input {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1px solid var(--divider); background: var(--bg);
+    font: inherit; margin-bottom: 12px;
+  }
+  .login button.primary {
+    width: 100%; padding: 14px; border-radius: 14px; border: none;
+    background: var(--gold); color: #fff; font-weight: 700; font-size: 15px;
+    letter-spacing: -.2px; margin-top: 8px;
+    box-shadow: 0 6px 18px rgba(184,135,60,0.35);
+  }
+  .login .err { color: var(--danger); font-size: 12px; margin-top: 8px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tabs button { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--divider); background: #fff; color: var(--muted); }
+  .tabs button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 18px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+const API = '/api/v1';
+const TOKEN_KEY = 'aurum_admin_token';
+
+function authHeaders() {
+  const t = localStorage.getItem(TOKEN_KEY);
+  return t ? { Authorization: 'Bearer ' + t } : {};
+}
+
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(opts.headers || {}) },
+    ...opts,
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error?.message || r.statusText);
+  }
+  return r.status === 204 ? null : r.json();
+}
+
+function Login({ onLogin }) {
+  const [email, setEmail] = useState('admin@aurumdent.cz');
+  const [password, setPassword] = useState('admin1234');
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setLoading(true); setErr('');
+    try {
+      const r = await api('/auth/admin/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      localStorage.setItem(TOKEN_KEY, r.access_token);
+      onLogin();
+    } catch (e) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <form className="login" onSubmit={submit}>
+      <h1>Aurum Dent · Админка</h1>
+      <p>Вход для администратора клиники</p>
+      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="email" type="email" autoFocus/>
+      <input value={password} onChange={e => setPassword(e.target.value)} placeholder="пароль" type="password"/>
+      <button className="primary" disabled={loading}>{loading ? 'Входим...' : 'Войти'}</button>
+      {err && <div className="err">{err}</div>}
+      <p style={{marginTop:16, fontSize:11}}>Seed credentials: admin@aurumdent.cz / admin1234</p>
+    </form>
+  );
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function Appointments() {
+  const [rows, setRows] = useState([]);
+  const [err, setErr] = useState('');
+
+  const load = () => api('/appointments').then(setRows).catch(e => setErr(e.message));
+  useEffect(() => { load(); }, []);
+
+  const setStatus = async (id, status) => {
+    try { await api('/appointments/' + id, { method: 'PATCH', body: JSON.stringify({ status }) }); load(); }
+    catch (e) { alert(e.message); }
+  };
+
+  return (
+    <section className="panel">
+      <h2>Записи · {rows.length}</h2>
+      {err && <div className="empty" style={{color: 'var(--danger)'}}>{err}</div>}
+      {!rows.length && !err && <div className="empty">Пока нет записей.<br/>Откройте <a href="/">главную</a> и пройдите booking flow.</div>}
+      {rows.length > 0 && (
+        <table>
+          <thead><tr><th>#</th><th>Клиент</th><th>Услуга</th><th>Врач</th><th>Когда</th><th>Статус</th><th>Действия</th></tr></thead>
+          <tbody>{rows.map(r => (
+            <tr key={r.id}>
+              <td>{r.id}</td>
+              <td>{r.client_name}<br/><span style={{color:'var(--muted)',fontSize:11}}>{r.client_phone || r.client_email}</span></td>
+              <td>{r.service_name}</td>
+              <td>{r.clinician_name}</td>
+              <td>{fmtDate(r.starts_at)}</td>
+              <td><span className={'status ' + r.status}>{r.status}</span></td>
+              <td>
+                <select value={r.status} onChange={e => setStatus(r.id, e.target.value)}>
+                  <option value="pending">pending</option>
+                  <option value="confirmed">confirmed</option>
+                  <option value="completed">completed</option>
+                  <option value="cancelled">cancelled</option>
+                  <option value="no_show">no_show</option>
+                </select>
+              </td>
+            </tr>
+          ))}</tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
+function Clients() {
+  const [rows, setRows] = useState([]);
+  useEffect(() => { api('/clients').then(setRows).catch(() => {}); }, []);
+  return (
+    <section className="panel">
+      <h2>Клиенты · {rows.length}</h2>
+      {!rows.length && <div className="empty">Клиенты появятся после первой записи.</div>}
+      {rows.length > 0 && (
+        <table>
+          <thead><tr><th>#</th><th>Имя</th><th>Email</th><th>Телефон</th><th>Записей</th></tr></thead>
+          <tbody>{rows.map(r => (
+            <tr key={r.id}>
+              <td>{r.id}</td><td>{r.name}</td><td>{r.email}</td><td>{r.phone || '—'}</td><td>{r.appointments_count}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
+function Services() {
+  const [rows, setRows] = useState([]);
+  useEffect(() => { api('/services').then(setRows); }, []);
+  return (
+    <section className="panel">
+      <h2>Услуги · {rows.length}</h2>
+      <table>
+        <thead><tr><th>#</th><th>RU</th><th>CZ</th><th>EN</th><th>Длит.</th><th>Цена</th></tr></thead>
+        <tbody>{rows.map(r => (
+          <tr key={r.id}><td>{r.id}</td><td>{r.name_ru}</td><td>{r.name_cz}</td><td>{r.name_en}</td><td>{r.duration_min} мин</td><td>{r.price_display || (r.price_czk + ' Kč')}</td></tr>
+        ))}</tbody>
+      </table>
+    </section>
+  );
+}
+
+function Clinicians() {
+  const [rows, setRows] = useState([]);
+  useEffect(() => { api('/clinicians').then(setRows); }, []);
+  return (
+    <section className="panel">
+      <h2>Врачи · {rows.length}</h2>
+      <table>
+        <thead><tr><th>#</th><th>Имя</th><th>Специализация</th><th>Био</th><th>Услуг</th></tr></thead>
+        <tbody>{rows.map(r => (
+          <tr key={r.id}><td>{r.id}</td><td>{r.name}</td><td>{r.title}</td><td>{r.bio_short || '—'}</td><td>{r.service_ids?.length || 0}</td></tr>
+        ))}</tbody>
+      </table>
+    </section>
+  );
+}
+
+function Dashboard({ onLogout }) {
+  const [tab, setTab] = useState('appointments');
+  const [stats, setStats] = useState({ appointments: 0, clients: 0, services: 0, clinicians: 0 });
+
+  useEffect(() => {
+    Promise.all([
+      api('/appointments').catch(() => []),
+      api('/clients').catch(() => []),
+      api('/services').catch(() => []),
+      api('/clinicians').catch(() => []),
+    ]).then(([a, c, s, cl]) => setStats({
+      appointments: a.length, clients: c.length, services: s.length, clinicians: cl.length,
+    }));
+  }, []);
+
+  return (
+    <>
+      <header>
+        <div className="brand">Aurum Dent <small>· Админка</small></div>
+        <div style={{display:'flex',gap:16,alignItems:'center'}}>
+          <a href="/">← на сайт</a>
+          <button className="ghost" onClick={onLogout}>Выйти</button>
+        </div>
+      </header>
+      <main>
+        <div className="grid">
+          <div className="stat"><div className="n">{stats.appointments}</div><div className="l">Записи</div></div>
+          <div className="stat"><div className="n">{stats.clients}</div><div className="l">Клиенты</div></div>
+          <div className="stat"><div className="n">{stats.services}</div><div className="l">Услуги</div></div>
+          <div className="stat"><div className="n">{stats.clinicians}</div><div className="l">Врачи</div></div>
+        </div>
+        <div className="tabs">
+          {[['appointments','Записи'],['clients','Клиенты'],['services','Услуги'],['clinicians','Врачи']].map(([k,l]) => (
+            <button key={k} className={tab===k?'active':''} onClick={() => setTab(k)}>{l}</button>
+          ))}
+        </div>
+        {tab === 'appointments' && <Appointments/>}
+        {tab === 'clients' && <Clients/>}
+        {tab === 'services' && <Services/>}
+        {tab === 'clinicians' && <Clinicians/>}
+      </main>
+    </>
+  );
+}
+
+function Root() {
+  const [authed, setAuthed] = useState(!!localStorage.getItem(TOKEN_KEY));
+  const logout = () => { localStorage.removeItem(TOKEN_KEY); setAuthed(false); };
+  return authed ? <Dashboard onLogout={logout}/> : <Login onLogin={() => setAuthed(true)}/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+</body>
+</html>
